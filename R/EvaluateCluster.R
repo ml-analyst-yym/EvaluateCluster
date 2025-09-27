@@ -9,7 +9,7 @@
 #' @param plot Determine whether the function gives the plot of result
 #'
 #' @returns Return a list include the result of 4 methods
-#'
+#' @export
 #' @importFrom SeuratObject JoinLayers
 #' @importFrom SeuratObject GetAssayData
 #' @import tidyverse
@@ -21,7 +21,7 @@
 #' EvaluateClusters(data,cores=8,rogue=FALSE,plot=FALSE)
 #' EvaluateClusters(data,rogue=FALSE,mrtree=FALSE,lisi=FALSE,cores=1)
 #' }
-EvaluateClusters <- function(data, cores = 1,
+EvaluateCluster <- function(data, cores = 1,
                              rogue = FALSE, lisi = FALSE, mrtree = FALSE, CH_index = TRUE,
                              plot = TRUE) {
   set.seed(12315)
