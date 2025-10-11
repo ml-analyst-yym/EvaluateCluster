@@ -4,41 +4,27 @@
 \alias{EvaluateCluster}
 \title{Evaluate cluster effectiveness}
 \usage{
-EvaluateCluster(
-  data,
-  cores = 1,
-  rogue = FALSE,
-  lisi = FALSE,
-  mrtree = FALSE,
-  CH_index = TRUE,
-  plot = TRUE
-)
+EvaluateCluster(data, cores = 1, auc_cutoff = 0.6, rogue_threshold = 0.8)
 }
 \arguments{
 \item{data}{A SeuratObject containing multiple resolution clusters}
 
 \item{cores}{Windows default 1. other system is free}
 
-\item{rogue}{First method, default false, recommend Windows to False}
+\item{auc_cutoff}{The threshold of AUC score, default 0.6. It will affect the maximum resolution}
 
-\item{lisi}{Second method, default false}
-
-\item{mrtree}{Third method, default false, recommend Windows to False}
-
-\item{CH_index}{Fourth method, default true}
-
-\item{plot}{Determine whether the function gives the plot of result}
+\item{rogue_threshold}{The threshold of rogue score, default 0.8. It will affect the minimum resolution}
 }
 \value{
-Return a list include the result of 4 methods
+Return a list include the result of all methods
 }
 \description{
 Help choose the best clustering resolution in Seurat.
 }
 \examples{
 \dontrun{
-EvaluateClusters(data,cores=20)
-EvaluateClusters(data,cores=8,rogue=FALSE,plot=FALSE)
-EvaluateClusters(data,rogue=FALSE,mrtree=FALSE,lisi=FALSE,cores=1)
+EvaluateClusters(data, cores=20)
+EvaluateClusters(data, cores=8, rogue_threshold=0.8, auc_cutoff=0.6)
+EvaluateClusters(data, cores=1, rogue_threshold=0.85, auc_cutoff=0.7)
 }
 }
