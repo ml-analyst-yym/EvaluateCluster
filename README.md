@@ -47,9 +47,7 @@ clisi 与 mrtree 共同确定排名前三的分辨率。最后，使用簇的内
 
 # 下载R包
 
-'
 devtools::install_github("ml-analyst-yym/EvaluateCluster")
-'
 
 # 该R包有三个依赖包
 
