@@ -23,7 +23,7 @@
 #' }
 
 EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
-                            rogue_threshold = 0.8) {
+                            rogue_threshold = 0.85) {
   set.seed(12315)
   
   # ---- Data preparation ----
