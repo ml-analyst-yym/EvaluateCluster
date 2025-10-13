@@ -47,15 +47,17 @@ clisi 与 mrtree 共同确定排名前三的分辨率。最后，使用簇的内
 
 # 下载R包
 
+'
 devtools::install_github("ml-analyst-yym/EvaluateCluster")
+'
 
 # 该R包有三个依赖包
 
-devtools::install_github("pengminshi/mrtree")#mrtree包（校正后多分辨率下的兰德系数）
+devtools::install_github("pengminshi/mrtree") # mrtree包（校正后多分辨率下的兰德系数）
 
-devtools::install_github("PaulingLiu/ROGUE")#ROGUE包（cluster纯度）
+devtools::install_github("PaulingLiu/ROGUE") # ROGUE包（cluster纯度）
 
-devtools::install_github("immunogenomics/lisi")#lisi包（局部逆辛普森指数）
+devtools::install_github("immunogenomics/lisi") # lisi包（局部逆辛普森指数）
 
 # 快速使用
 
