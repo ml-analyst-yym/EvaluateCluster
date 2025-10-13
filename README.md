@@ -63,4 +63,4 @@ EvaluateCluster(data) # Windows下运行，核心数为1，速度非常慢，10�
 
 EvaluateCluster(data, cores=40) # 除Windows外，多核运行
 
-EvaluateCluster(data, cores=10, rogue_threshold=0.85, auc_cutoff=0.6) # 可自行设定阈值
+EvaluateCluster(data, cores=40, min_pct=0.3, logfc_threshold = 0.2) # 可自行设定阈值
