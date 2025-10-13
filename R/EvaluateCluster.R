@@ -4,6 +4,9 @@
 #' @param cores Windows default 1. other system is free
 #' @param rogue_threshold The threshold of rogue score, default 0.8. It will affect the minimum resolution
 #' @param auc_cutoff The threshold of AUC score, default 0.6. It will affect the maximum resolution
+#' @param min_pct The parameter of FindAllMarkers, default 0.1. It will affect the result of AUC.
+#' @param logfc_threshold The parameter of FindAllMarkers, default 0.1. It will affect the result of AUC.
+#' @param min_diff_pct The parameter of FindAllMarkers, default 0.1. It will affect the result of AUC.
 #' @returns Return a list include the result of all methods
 #' @export
 #' @import Seurat
@@ -18,12 +21,12 @@
 #' @examples
 #' \dontrun{
 #' EvaluateClusters(data, cores=40)
-#' EvaluateClusters(data, cores=8, rogue_threshold=0.8, auc_cutoff=0.6)
-#' EvaluateClusters(data, cores=1, rogue_threshold=0.85, auc_cutoff=0.7)
+#' EvaluateClusters(data, cores=8, rogue_threshold=0.85, auc_cutoff=0.6)
+#' EvaluateClusters(data, cores=1, min_pct=0.3, logfc_threshold=0.2, min_diff_pct=0.1)
 #' }
 
-EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
-                            rogue_threshold = 0.85) {
+EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6, rogue_threshold = 0.85, 
+                            min_pct = 0.1, logfc_threshold = 0.1, min_diff_pct = 0.1) {
   set.seed(12315)
   
   # ---- Data preparation ----
@@ -73,7 +76,10 @@ EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
     scRNA_tmp <- SetIdent(scRNA_tmp, value = res_col)
     markers <- FindAllMarkers(
       scRNA_tmp,
-      test.use = "roc"
+      test.use = "roc",
+      min.pct = min_pct,
+      logfc.threshold = logfc_threshold,
+      min.diff.pct = min_diff_pct
     ) %>%
       filter(myAUC > auc_cutoff) %>%
       count(cluster, name = "number") %>%

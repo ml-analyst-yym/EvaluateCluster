@@ -4,7 +4,15 @@
 \alias{EvaluateCluster}
 \title{Evaluate cluster effectiveness}
 \usage{
-EvaluateCluster(data, cores = 1, auc_cutoff = 0.6, rogue_threshold = 0.8)
+EvaluateCluster(
+  data,
+  cores = 1,
+  auc_cutoff = 0.6,
+  rogue_threshold = 0.85,
+  min_pct = 0.1,
+  logfc_threshold = 0.1,
+  min_diff_pct = 0.1
+)
 }
 \arguments{
 \item{data}{A SeuratObject containing multiple resolution clusters}
@@ -14,6 +22,12 @@ EvaluateCluster(data, cores = 1, auc_cutoff = 0.6, rogue_threshold = 0.8)
 \item{auc_cutoff}{The threshold of AUC score, default 0.6. It will affect the maximum resolution}
 
 \item{rogue_threshold}{The threshold of rogue score, default 0.8. It will affect the minimum resolution}
+
+\item{min_pct}{The parameter of FindAllMarkers, default 0.1. It will affect the result of AUC.}
+
+\item{logfc_threshold}{The parameter of FindAllMarkers, default 0.1. It will affect the result of AUC.}
+
+\item{min_diff_pct}{The parameter of FindAllMarkers, default 0.1. It will affect the result of AUC.}
 }
 \value{
 Return a list include the result of all methods
@@ -24,7 +38,7 @@ Help choose the best clustering resolution in Seurat.
 \examples{
 \dontrun{
 EvaluateClusters(data, cores=40)
-EvaluateClusters(data, cores=8, rogue_threshold=0.8, auc_cutoff=0.6)
-EvaluateClusters(data, cores=1, rogue_threshold=0.85, auc_cutoff=0.7)
+EvaluateClusters(data, cores=8, rogue_threshold=0.85, auc_cutoff=0.6)
+EvaluateClusters(data, cores=1, min_pct=0.3, logfc_threshold=0.2, min_diff_pct=0.1)
 }
 }
