@@ -23,7 +23,7 @@ Help choose the best clustering resolution in Seurat.
 }
 \examples{
 \dontrun{
-EvaluateClusters(data, cores=20)
+EvaluateClusters(data, cores=40)
 EvaluateClusters(data, cores=8, rogue_threshold=0.8, auc_cutoff=0.6)
 EvaluateClusters(data, cores=1, rogue_threshold=0.85, auc_cutoff=0.7)
 }

@@ -4,20 +4,20 @@
 #' @param cores Windows default 1. other system is free
 #' @param rogue_threshold The threshold of rogue score, default 0.8. It will affect the minimum resolution
 #' @param auc_cutoff The threshold of AUC score, default 0.6. It will affect the maximum resolution
-#'
 #' @returns Return a list include the result of all methods
 #' @export
 #' @import Seurat
 #' @import purrr
 #' @import dplyr
 #' @importFrom clusterCrit intCriteria
+#' @importFrom SeuratObject JoinLayers
 #' @import parallel
 #' @import ROGUE
 #' @import lisi
 #' @import mrtree
 #' @examples
 #' \dontrun{
-#' EvaluateClusters(data, cores=20)
+#' EvaluateClusters(data, cores=40)
 #' EvaluateClusters(data, cores=8, rogue_threshold=0.8, auc_cutoff=0.6)
 #' EvaluateClusters(data, cores=1, rogue_threshold=0.85, auc_cutoff=0.7)
 #' }
@@ -27,7 +27,7 @@ EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
   set.seed(12315)
   
   # ---- Data preparation ----
-  data <- JoinLayers(data)
+  data <- SeuratObject::JoinLayers(data)
   data_ori <- as.data.frame(data@reductions$umap@cell.embeddings)
   meta_ori <- data@meta.data
   label <- grep("^RNA_snn_res\\.", colnames(meta_ori), value = TRUE)
@@ -51,10 +51,10 @@ EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
   names(rogue_list) <- label
   rogue_res <- sapply(rogue_list, function(df) mean(as.matrix(df), na.rm = TRUE))
   names(rogue_res) <- sub("RNA_snn_res\\.", "", names(rogue_res))
-  message("ROGUE finish \n")
   
   rogue_valid <- names(rogue_res[rogue_res > rogue_threshold])
   min_rogue_res <- if (length(rogue_valid) > 0) min(as.numeric(rogue_valid)) else NA
+  message("ROGUE finish \n")
   
   
   # ---- AUC ----
@@ -85,8 +85,7 @@ EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
   parallel::stopCluster(cl)
   
   marker_counts <- dplyr::bind_rows(marker_counts_list)
-  
-  # ---- Identify upper limit resolution (markerless cluster detected) ----
+  #Identify upper limit resolution (markerless cluster detected)
   res_numeric <- sort(as.numeric(sub("RNA_snn_res\\.", "", res_cols)))
   auc_upper_res <- {
     idx <- purrr::map_lgl(res_cols, function(res) {
@@ -106,6 +105,7 @@ EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
   }
   message("AUC finish \n")
   
+  
   # ---- LISI ----
   if (!requireNamespace("lisi", quietly = TRUE)) {
     message("Package 'lisi' not found. You can install it with:")
@@ -113,12 +113,12 @@ EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
     stop("Please install the lisi package before running EvaluateCluster().")
   }
   message("LISI start \n")
-  lisi_res <- sapply(label, function(res_col) {
-    lisi_mat <- lisi::compute_lisi(data_ori, meta_ori, res_col)
-    mean(lisi_mat[, res_col], na.rm = TRUE)
-  })
+  lisi_i <- compute_lisi(data_ori, meta_ori, label)
+  lisi_res <- apply(lisi_i,2,mean)
+  lisi_res <- 1/lisi_res
   names(lisi_res) <- sub("RNA_snn_res\\.", "", label)
   message("LISI finish \n")
+  
   
   # ---- MRtree ----
   if (!requireNamespace("mrtree", quietly = TRUE)) {
@@ -127,14 +127,17 @@ EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
     stop("Please install the mrtree package before running EvaluateCluster().")
   }
   message("MRtree start \n")
-  mrtree_res <- sapply(label, function(res_col) {
-    out <- mrtree::mrtree(data, prefix = res_col, n.cores = cores)
-    stab.out <- mrtree::stability_plot(out)
-    ks.flat <- apply(out$labelmat.flat, 2, FUN = function(x) length(unique(x)))
-    matched_cols <- names(ks.flat)[ks.flat %in% stab.out$df$resolution]
-    matched_scores <- stab.out$df$ari[match(ks.flat[matched_cols], stab.out$df$resolution)]
-    mean(matched_scores, na.rm = TRUE)
-  })
+  out=mrtree(data,prefix = "RNA_snn_res.",n.cores=cores)
+  stab.out = stability_plot(out)
+  ks.flat = apply(out$labelmat.flat, 2, FUN=function(x) length(unique(x)))
+  matched_cols <- names(ks.flat)[ks.flat %in% stab.out$df$resolution]
+  matched_scores <- stab.out$df$ari[match(ks.flat[matched_cols], stab.out$df$resolution)]
+  mrtree_r <- data.frame(
+    colname = matched_cols,
+    resolution = ks.flat[matched_cols],
+    ari = matched_scores)
+  mrtree_r[,1] <- sub("RNA_snn_res\\.", "", mrtree_r[,1])
+  mrtree_res <- mrtree_r[,3]
   names(mrtree_res) <- sub("RNA_snn_res\\.", "", label)
   message("MRtree finish \n")
   
@@ -170,10 +173,46 @@ EvaluateCluster <- function(data, cores = 1, auc_cutoff = 0.6,
   names(rank_avg) <- names(CH_res)
   
   # ---- LISI + MRtree mean, select top3 ----
-  mean_lisi_mrtree <- mean(lisi_res + mrtree_res)
-  top3_candidates <- names(sort(mean_lisi_mrtree, decreasing = TRUE))[1:3]
-  final_rank <- rank_avg[names(rank_avg) %in% top3_candidates]
-  best_res <- names(which.min(final_rank))
+  mean_lisi_mrtree <- (lisi_res + mrtree_res)/2
+  names(mean_lisi_mrtree) <- names(lisi_res)
+  
+  # build allowed resolutions by min_rogue_res and auc_upper_res
+  all_res_names <- names(mean_lisi_mrtree)
+  allowed_mask <- rep(TRUE, length(all_res_names))
+  # apply ROGUE lower bound if present
+  if (!is.na(min_rogue_res)) {
+    allowed_mask <- allowed_mask & (as.numeric(all_res_names) >= as.numeric(min_rogue_res))
+  }
+  # apply AUC upper bound if present
+  if (!is.na(auc_upper_res)) {
+    allowed_mask <- allowed_mask & (as.numeric(all_res_names) <= as.numeric(auc_upper_res))
+  }
+  allowed_res <- all_res_names[allowed_mask]
+  
+  # if filtering yields none, fall back to unfiltered set
+  if (length(allowed_res) == 0) {
+    consider_vec <- mean_lisi_mrtree
+  } else {
+    consider_vec <- mean_lisi_mrtree[allowed_res]
+  }
+  
+  # pick top5 from considered vector
+  ord <- order(consider_vec, decreasing = TRUE, na.last = NA)
+  if (length(ord) == 0) {
+    top5_candidates <- character(0)
+  } else {
+    topN <- min(5, length(ord))
+    top5_candidates <- names(consider_vec)[ord[1:topN]]
+  }
+  
+  # final selection among top3 by internal rank_avg
+  final_rank <- rank_avg[names(rank_avg) %in% top5_candidates]
+  if (length(final_rank) == 0) {
+    # fallback: if no top3 candidates (unlikely), pick best by rank across allowed_res if available, else overall
+    if (length(allowed_res) > 0) {
+      best_res <- allowed_res[which.min(rank_avg[allowed_res])]
+    } else {best_res <- names(which.min(rank_avg))}
+  } else {best_res <- names(which.min(final_rank))}
   
   # ---- Combine results ----
   result_df <- data.frame(
