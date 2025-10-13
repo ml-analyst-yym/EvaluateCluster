@@ -24,4 +24,8 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown
+Remotes:
+    pengminshi/mrtree,
+    PaulingLiu/ROGUE,
+    immunogenomics/lisi
 VignetteBuilder: knitr

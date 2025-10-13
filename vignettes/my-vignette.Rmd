@@ -41,5 +41,6 @@ vignette: >
 ## 快速开始
 
 ```{r setup, include=FALSE}
+remotes::install_github("ml-analyst-yym/EvaluateCluster", dependencies = TRUE)
 library(EvaluateCluster)
 ```
