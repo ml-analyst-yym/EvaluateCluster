@@ -17,7 +17,6 @@ Depends:
 Imports: 
     purrr,
     clusterCrit,
-    SeuratObject,
     lisi,
     mrtree,
     ROGUE
