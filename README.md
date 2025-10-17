@@ -11,7 +11,9 @@ clisi 与 mrtree 共同确定排名前三的分辨率。最后，使用簇的内
 
 参数data为SeuratObject，cores在Windows下默认为1，不可更改，否则报错。服务器中可自行设定。
 
-要求：输入的Seurat对象已经运行完RunUMAP，且包含多个分辨率（>=5）。
+如果在ROGUE结果中存在NA值，请提高rogue_span参数，具体解释参考loess的span参数。
+
+要求：输入的Seurat对象已经运行完RunUMAP、JoinLayers，且包含多个分辨率（>=5）。
 
 最后：该包是多种检验Seurat聚类效果R包的整合包。操作简单、源码易懂，出现BUG概不负责。
 
@@ -59,8 +61,10 @@ devtools::install_github("immunogenomics/lisi") # lisi包（局部逆辛普森�
 
 # 快速使用
 
-EvaluateCluster(data) # Windows下运行，核心数为1，速度非常慢，10分辨率约1天，并不推荐。
+res_eva <- EvaluateCluster(data, cores = 1, rogue_span=0.6) # cores请自行设定
 
-EvaluateCluster(data, cores=40) # 除Windows外，多核运行
+res_auc <- CalculateAUC(data, cores = 1, min_pct = 0.05, logfc_threshold = 0.1, auc_cutoff = 0.6) # 不推荐更改auc_cutoff！
 
-EvaluateCluster(data, cores=40, min_pct=0.3, logfc_threshold = 0.2) # 可自行设定阈值
+x <- Choose_res(result_eva, res_auc, rogue_threshold = 0.85) # rogue_threshold默认为0.85，参考文献中推荐为0.9
+
+x$best_resolution
