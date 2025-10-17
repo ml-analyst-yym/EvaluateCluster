@@ -2,7 +2,7 @@
 #' @description Help choose the best clustering resolution in Seurat.
 #' @param data A SeuratObject containing multiple resolution clusters
 #' @param cores Windows default 1. other system is free
-#' @param rogue_span The parameter of rogue controls the loess. Default 0.6.Recommend 0.6-0.8
+#' @param rogue_span The parameter of rogue controls the loess. Default 0.5.Recommend 0.5-0.8
 #' @returns Return a list include the result of all methods
 #' @import Seurat
 #' @import dplyr
@@ -14,11 +14,11 @@
 #' @examples
 #' \dontrun{
 #' EvaluateClusters(data, cores=40)
-#' EvaluateClusters(data, cores=8, rogue_span=0.8)
+#' EvaluateClusters(data, cores=8, rogue_span=0.6)
 #' EvaluateClusters(data, cores=1, rogue_span=0.5)
 #' }
 #' @export
-EvaluateCluster <- function(data, cores = 1, rogue_span=0.6) {
+EvaluateCluster <- function(data, cores = 1, rogue_span=0.5) {
   set.seed(12315)
   
   # ---- Data preparation ----
@@ -118,7 +118,8 @@ EvaluateCluster <- function(data, cores = 1, rogue_span=0.6) {
   )
   
   return(list(scores = result_df,
-              meta_ori = meta_ori))
+              meta_ori = meta_ori,
+              rogue_ori = rogue_list))
 }
 
 
@@ -174,7 +175,8 @@ CalculateAUC <- function(data, cores = 1, min_pct = 0.05, logfc_threshold = 0.1,
   
   marker_counts <- dplyr::bind_rows(marker_counts_list)
   message("AUC finish \n")
-  return(marker_counts)
+  return(list(marker_counts = marker_counts,
+              marker_list = marker_counts_list))
 }
 
 
@@ -183,19 +185,19 @@ CalculateAUC <- function(data, cores = 1, min_pct = 0.05, logfc_threshold = 0.1,
 #' @title Choose the resolution
 #' @description Choose the best resolution based on the result of other function.
 #' @param result_eva the result of EvaluateCluster
-#' @param marker_counts the result of CalculateAUC
+#' @param result_auc the result of CalculateAUC
 #' @param rogue_threshold The threshold of rogue score, default 0.8. It will affect the minimum resolution
 #' @returns Return a list include the result of all methods
 #' @import purrr
 #' @examples
 #' \dontrun{
-#' Choose_res(result_eva, marker_counts)
-#' Choose_res(result_eva, marker_counts, rogue_threshold = 0.8)
-#' Choose_res(result_eva, marker_counts, rogue_threshold = 0.9)
+#' Choose_res(result_eva, result_auc)
+#' Choose_res(result_eva, result_auc, rogue_threshold = 0.8)
+#' Choose_res(result_eva, result_auc, rogue_threshold = 0.9)
 #' }
 #' @export
-Choose_res <- function(result_eva, marker_counts, rogue_threshold = 0.85){
-  
+Choose_res <- function(result_eva, result_auc, rogue_threshold = 0.85){
+  marker_counts = result_auc$marker_counts
   result_df = result_eva$scores
   rogue_res = result_df$ROGUE
   lisi_res = result_df$LISI
@@ -251,14 +253,14 @@ Choose_res <- function(result_eva, marker_counts, rogue_threshold = 0.85){
   # pick top5 from considered vector
   ord <- order(consider_vec, decreasing = TRUE, na.last = NA)
   if (length(ord) == 0) {
-    top5_candidates <- character(0)
+    top_candidates <- character(0)
   } else {
     topN <- min(5, length(ord))
-    top5_candidates <- names(consider_vec)[ord[1:topN]]
+    top_candidates <- names(consider_vec)[ord[1:topN]]
   }
   
   # final selection among top3 by internal rank_avg
-  final_rank <- rank_avg[names(rank_avg) %in% top5_candidates]
+  final_rank <- rank_avg[names(rank_avg) %in% top_candidates]
   if (length(final_rank) == 0) {
     # fallback: if no topN candidates (unlikely), pick best by rank across allowed_res if available, else overall
     if (length(allowed_res) > 0) {
@@ -270,8 +272,8 @@ Choose_res <- function(result_eva, marker_counts, rogue_threshold = 0.85){
   
   return(list(scores = result_df,
               auc_markers = marker_counts,
-              rogue_min_res = min_rogue_res,
-              auc_upper_res = auc_upper_res,
+              min_res = min_rogue_res,
+              max_res = auc_upper_res,
               best_resolution = best_res))
 }
 

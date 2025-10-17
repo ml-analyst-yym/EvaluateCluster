@@ -4,14 +4,14 @@
 \alias{Choose_res}
 \title{Choose the resolution}
 \usage{
-Choose_res(result_eva, marker_counts, rogue_threshold = 0.85)
+Choose_res(result_eva, result_auc, rogue_threshold = 0.85)
 }
 \arguments{
 \item{result_eva}{the result of EvaluateCluster}
 
-\item{marker_counts}{the result of CalculateAUC}
-
 \item{rogue_threshold}{The threshold of rogue score, default 0.8. It will affect the minimum resolution}
+
+\item{marker_counts}{the result of CalculateAUC}
 }
 \value{
 Return a list include the result of all methods
@@ -21,8 +21,8 @@ Choose the best resolution based on the result of other function.
 }
 \examples{
 \dontrun{
-Choose_res(result_eva, marker_counts)
-Choose_res(result_eva, marker_counts, rogue_threshold = 0.8)
-Choose_res(result_eva, marker_counts, rogue_threshold = 0.9)
+Choose_res(result_eva, result_auc)
+Choose_res(result_eva, result_auc, rogue_threshold = 0.8)
+Choose_res(result_eva, result_auc, rogue_threshold = 0.9)
 }
 }

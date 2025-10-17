@@ -4,14 +4,14 @@
 \alias{EvaluateCluster}
 \title{Evaluate cluster effectiveness}
 \usage{
-EvaluateCluster(data, cores = 1, rogue_span = 0.6)
+EvaluateCluster(data, cores = 1, rogue_span = 0.5)
 }
 \arguments{
 \item{data}{A SeuratObject containing multiple resolution clusters}
 
 \item{cores}{Windows default 1. other system is free}
 
-\item{rogue_span}{The parameter of rogue controls the loess. Default 0.6.Recommend 0.6-0.8}
+\item{rogue_span}{The parameter of rogue controls the loess. Default 0.5.Recommend 0.5-0.8}
 }
 \value{
 Return a list include the result of all methods
@@ -22,7 +22,7 @@ Help choose the best clustering resolution in Seurat.
 \examples{
 \dontrun{
 EvaluateClusters(data, cores=40)
-EvaluateClusters(data, cores=8)
-EvaluateClusters(data, cores=1)
+EvaluateClusters(data, cores=8, rogue_span=0.6)
+EvaluateClusters(data, cores=1, rogue_span=0.5)
 }
 }
