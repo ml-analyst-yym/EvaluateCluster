@@ -65,6 +65,6 @@ res_eva <- EvaluateCluster(data, cores = 1, rogue_span=0.6) # cores请自行设�
 
 res_auc <- CalculateAUC(data, cores = 1, min_pct = 0.05, logfc_threshold = 0.1, auc_cutoff = 0.6) # 不推荐更改auc_cutoff！
 
-x <- Choose_res(result_eva, res_auc, rogue_threshold = 0.85) # rogue_threshold默认为0.85，参考文献中推荐为0.9
+x <- Choose_res(res_eva, res_auc, rogue_threshold = 0.85) # rogue_threshold默认为0.85，参考文献中推荐为0.9
 
 x$best_resolution
